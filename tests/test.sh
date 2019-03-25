@@ -10,7 +10,7 @@ else
 fi
 
 echo "Test: test 1"
-../scripts/rancher-deploy.sh patch -u https://test.fi/ra patch.json
+../scripts/rancher-deploy.sh patch -s https://test.fi/ra -t dd -d test -n vantool-pro  -r https://gitlab.com/montel-ig/vantool patch.json --dry-run
 retval=$?
 if [ $retval -ne 1 ] ; then
   echo "OK: test 1"

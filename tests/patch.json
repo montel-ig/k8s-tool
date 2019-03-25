@@ -1,3 +1,85 @@
 {
-  "$IMAGE": "$IMAGE"
+  "apiVersion": "apps/v1beta2",
+  "kind": "Deployment",
+  "metadata": {
+    "name": "yeplyde",
+    "namespace": "yeplyfi-pro",
+    "labels": {
+      "app": "yeplyde"
+    }
+  },
+  "spec": {
+    "selector": {
+      "matchLabels": {
+        "app": "yeplyde"
+      }
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "app": "yeplyde"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "image": "nginx",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "yeplyfi2",
+            "ports": [
+              {
+                "containerPort": 80,
+                "name": "80tcp02",
+                "protocol": "TCP"
+              }
+            ],
+            "resources": {
+            },
+            "stdin": true,
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "tty": true,
+            "volumeMounts": [
+              {
+                "mountPath": "/usr/share/nginx/html/",
+                "name": "yeplyde"
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "imagePullSecrets": [
+          {
+            "name": "gitlab"
+          }
+        ],
+        "initContainers": [
+          {
+            "args": [
+              "bash",
+              "-c",
+              "cp -rv /srv/yeply/_site/* /site/"
+            ],
+            "image": "${IMAGE}",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "yeplyde",
+            "volumeMounts": [
+              {
+                "mountPath": "/site",
+                "name": "yeplyde"
+              }
+            ]
+          }
+        ],
+        "restartPolicy": "Always",
+        "volumes": [
+          {
+            "emptyDir": {
+            },
+            "name": "yeplyde"
+          }
+        ]
+      }
+    }
+  }
 }

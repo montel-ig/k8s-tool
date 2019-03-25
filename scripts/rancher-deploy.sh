@@ -3,18 +3,13 @@
 # [Author] Title
 #          Description
 # ------------------------------------------------------------------
-set -ex
-#trap read debug
-#trap 'do_something' ERR
-function do_something {
-    echo "Error!"
-    exit 1
-}
-
+#set -ex
 
 
 VERSION=0.1.0
-USAGE="Usage: pathc|apply|create [args] file.(json|yaml)"
+USAGE="""
+Usage: pathc|apply|create [args] file.(json|yaml)
+"""
 
 
 K8S_URL=$KUBE_RANCHER_URL
@@ -22,17 +17,23 @@ TOKEN=$KUBE_RANCHER_TOKEN
 NAMESPACE=$KUBE_RANCHER_NAMESPACE
 DEPLOYMENT=$KUBE_RANCHER_DEPLOYMENT
 CONTAINER=$KUBE_CONTAINER_NAME
-PATCH_JSON=${PATCH_JSON-patch.json}
+
 
 REGISTRY=$DOCKER_REGISTRY/$DOCKER_REPO
 TAG=latest
+FORMAT=json
+DRYRUN=$(false)
 
+#trap read debug
 # read the options
-TEMP=`getopt -o :s:t:n:d:u: --long server:,token:,namespace:,deployment: -n 'test.sh' -- "$@"`
+TEMP=`getopt -o 's:t:n:d:r:jy' --long 'registry:,server:,token:,namespace:,deployment:,dry-run' -n 'test.sh' -- "$@"`
+if [ $? -ne 0 ]; then
+	echo $USAGE >&2
+	exit 1
+fi
+
 eval set -- "$TEMP"
-function shiftParams(){
-shift $1
-}
+unset TEMP
 # extract options and their arguments into variables.
 while true ; do
     case "$1" in
@@ -48,16 +49,19 @@ while true ; do
             REGISTRY=$2; shift 2;;
         -t|--tag)
             TAG=$2; shift 2;;
-
+        -j)
+           FORMAT=json; shift 1;;
+        -y)
+           FORMAT=yaml; shift 1;;
+        --dry-run)
+           DRYRUN=true; shift 1;;
 
         --) shift ; break ;;
         *) echo "Internal error!" ; exit 1 ;;
     esac
 done
 
-PATCH_JSON=${PATCH_JSON-patch.json}
 KIND=${KIND-deployment}
-
 
 cmd=$1
 param=$2
@@ -69,6 +73,14 @@ if [ -z "$cmd" ]; then
   exit 1
 fi
 
+if [ -z "$param" ] && [ -z "$PATCH_JSON" ]; then
+  >&2 echo 'json|yaml|$PATCH_JSON file missing'
+  exit 1
+fi
+
+PATCH_JSON=${param-$PATCH_JSON}
+
+
 if [ -z "$K8S_URL" ]; then
   >&2 echo '-s / $KUBE_RANCHER_URL  is missing'
   exit 1
@@ -78,7 +90,7 @@ if [ -z "$TOKEN" ]; then
   >&2 echo '-t / $KUBE_RANCHER_TOKEN  is missing'
   exit 1
 fi
-if [ -z "$REGISTRY" ]; then
+if [ "$REGISTRY" == "/" ]; then
   >&2 echo '-r / $DOCKER_REGISTRY/$DOCKER_REPO   is missing'
   exit 1
 fi
@@ -93,32 +105,73 @@ if [ -z "$NAMESPACE" ]; then
   exit 1
 fi
 
-# -----------------------------------------------------------------
-function command_apply {
-    echo "test"
-}
-
-function command_patch {
-cat <<EOF
-    kubectl --server=${K8S_URL} \
-    --insecure-skip-tls-verify=true \
-    --token=${TOKEN} \
-    --namespace=${NAMESPACE} \
-    patch $KIND/${DEPLOYMENT} --patch '%'
-EOF
-}
-
-set -x
 
 IMAGE=$REGISTRY:$TAG
 # -----------------------------------------------------------------
 export K8S_URL TOKEN NAMESPACE DEPLOYMENT CONTAINER PATCH_JSON IMAGE
 # The docker-image-version must be updated every time you built a new container.
 
-PATCH_JSON=${PATCH_JSON-patch.json}
+
 KIND=${KIND-deployment}
-cat $PATCH_JSON | envsubst  > /tmp/rancher-deploy.yaml
-cat /tmp/rancher-deploy.yaml
+
+if [ "$FORMAT" == "json" ];then
+  ./yq r $PATCH_JSON > /tmp/rancher-deploy.yaml
+else
+   cat $PATCH_JSON > /tmp/rancher-deploy.yaml
+fi
+cat /tmp/rancher-deploy.yaml | envsubst  > /tmp/rancher-deploy-substituted.yaml
+
+# -----------------------------------------------------------------
+
+
+function command_patch {
+    cat /tmp/rancher-deploy-substituted.yaml
+
+    if [ $DRYRUN ]; then
+      cat <<EOF
+    kubectl --server=${K8S_URL} \
+    --insecure-skip-tls-verify=true \
+    --token=${TOKEN} \
+    --namespace=${NAMESPACE} \
+    patch $KIND/${DEPLOYMENT} --patch "$(cat /tmp/rancher-deploy-substituted.yaml)"
+EOF
+    else
+     kubectl --server=${K8S_URL} \
+        --insecure-skip-tls-verify=true \
+        --token=${TOKEN} \
+        --namespace=${NAMESPACE} \
+        patch $KIND/${DEPLOYMENT} --patch "$(cat /tmp/rancher-deploy-substituted.yaml)"
+    fi
+}
+
+function kubectl_apply_create {
+if [ $DRYRUN ]; then
+   cat /tmp/rancher-deploy-substituted.yaml
+   cat << EOF
+   | kubectl --server=${K8S_URL} \
+    --insecure-skip-tls-verify=true \
+    --token=${TOKEN} \
+    --namespace=${NAMESPACE} \
+    $1 -f -
+EOF
+else
+  cat /tmp/rancher-deploy-substituted.yaml | kubectl --server=${K8S_URL} \
+    --insecure-skip-tls-verify=true \
+    --token=${TOKEN} \
+    --namespace=${NAMESPACE} \
+    $1 -f -
+fi
+
+}
+
+function command_apply {
+    kubectl_apply_create apply
+}
+
+function command_create {
+    kubectl_apply_create create
+}
+
 
 
 # -----------------------------------------------------------------
@@ -130,29 +183,6 @@ fi
 
 
 
-exit 1
+exit $?
 
 set -o xtrace
-
-# Get the K8S_URL and Token from Rancher Cluster level Kubeconfig (logged in as the CI user)
-export K8S_URL=$KUBE_RANCHER_URL
-export TOKEN=$KUBE_RANCHER_TOKEN
-export NAMESPACE=$KUBE_RANCHER_NAMESPACE
-
-# Typically these are identical. Check from the YAML file of your deployment.
-export DEPLOYMENT=$KUBE_RANCHER_DEPLOYMENT
-export CONTAINER=$KUBE_CONTAINER_NAME
-
-# The docker-image-version must be updated every time you built a new container.
-export IMAGE=$DOCKER_REGISTRY/$DOCKER_REPO:$TAG
-PATCH_JSON=${PATCH_JSON-patch.json}
-KIND=${KIND-deployment}
-
-#preview json
-cat $PATCH_JSON | envsubst | cat
-# flatten JSON to oneliner and run envsubst
-cat $PATCH_JSON | envsubst | tr -d '\n\r' |xargs -I % kubectl --server=${K8S_URL} \
-    --insecure-skip-tls-verify=true \
-    --token=${TOKEN} \
-    --namespace=${NAMESPACE} \
-    patch $KIND/${DEPLOYMENT} --patch '%'

@@ -1,13 +1,14 @@
 # k8s-tool
-CI/CD deploy helper with kubectl and others
+CI/CD deploy helper with kubectl, curl yq and rancher-deploy script
+
 
 ## Docker image
 montel/k8s-tool:latest
 
 ## Usage
 
-```bash
-Usage: pathc|apply|create [args] file.(json|yaml)
+```text
+Usage: patch|apply|create [args] file.(json|yaml)
 
 
 -s, --server          Kubernetes cluster/ Rancher API (\$KUBE_RANCHER_URL)
@@ -28,3 +29,7 @@ export KUBE_RANCHER_NAMESPACE=stage
 rancher-deploy.sh -s https://rancher/k8s -t mysecrettoken -r registry.gitlab.com/myproject --tag v1.2.3 -y --dry-run apply patch.yaml
 
 ```
+
+*Thanks Mike for this awesome yaml tool!*
+
+* https://github.com/mikefarah/yq

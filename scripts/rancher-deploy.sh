@@ -179,10 +179,8 @@ if [ -n "$(type -t ${command})" ] && [ "$(type -t ${command})" = function ]; the
    ${command}
 else
    echo "'${cmd}' is NOT a command";
+   exit 1
 fi
-
-
 
 exit $?
 
-set -o xtrace

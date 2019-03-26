@@ -30,6 +30,73 @@ rancher-deploy.sh -s https://rancher/k8s -t mysecrettoken -r registry.gitlab.com
 
 ```
 
+### Gitlab pipeline example ###
+In this example all other parameters are coming from CI/CD environment
+```yaml
+
+# container is build before and stored to registry $CI_COMMIT_SHORT_SHA is 
+#  used to tag freshly built image
+deploy:project_staging:
+  stage: deploy
+  image: montel/k8s-tool
+  variables:
+    TAG: $CI_COMMIT_SHORT_SHA
+  script:
+    - export TAG
+    - rancher-deploy.sh -n myproject-stage -y apply ./k8s/deployment.yaml
+  only:
+    - develop
+  dependencies:
+    - build:myproject
+
+```
+
+**k8s/deployment.yaml** file in project directory. All env valiables are passed in and can be used note *${IMAGE}*
+```yaml
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: myproject
+  labels:
+    app: myproject
+spec:
+  selector:
+    matchLabels:
+      app: myproject
+  template:
+    metadata:
+      labels:
+        app: myproject
+    spec:
+      containers:
+      - image: nginx
+        imagePullPolicy: IfNotPresent
+        name: nginx
+        ports:
+        - containerPort: 80
+          name: 80tcp02
+          protocol: TCP
+        volumeMounts:
+        - mountPath: "/usr/share/nginx/html/"
+          name: myproject-volume
+      initContainers:
+      - args:
+        - bash
+        - "-c"
+        - "cp -rv /srv/static/_site/* /site/"
+        image: "${IMAGE}"
+        name: myproject
+        volumeMounts:
+        - mountPath: "/site"
+          name: myproject-volume
+      restartPolicy: Always
+      volumes:
+      - emptyDir: {}
+        name: myproject-volume
+
+```
+
+
 *Thanks Mike for this awesome yaml tool!*
 
 * https://github.com/mikefarah/yq

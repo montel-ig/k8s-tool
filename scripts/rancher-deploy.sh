@@ -20,13 +20,13 @@ CONTAINER=$KUBE_CONTAINER_NAME
 
 
 REGISTRY=$DOCKER_REGISTRY/$DOCKER_REPO
-TAG=latest
+TAG=${DOCKER_TAG-latest}
 FORMAT=json
 DRYRUN=$(false)
 
 #trap read debug
 # read the options
-TEMP=`getopt -o 's:t:n:d:r:jy' --long 'registry:,server:,token:,namespace:,deployment:,dry-run' -n 'test.sh' -- "$@"`
+TEMP=`getopt -o 's:t:n:d:r:jy' --long 'registry:,server:,token:,namespace:,deployment:,dry-run,tag:' -n 'test.sh' -- "$@"`
 if [ $? -ne 0 ]; then
 	echo $USAGE >&2
 	exit 1
@@ -55,7 +55,8 @@ while true ; do
            FORMAT=yaml; shift 1;;
         --dry-run)
            DRYRUN=true; shift 1;;
-
+        --tag)
+           TAG=$2; shift 2;;
         --) shift ; break ;;
         *) echo "Internal error!" ; exit 1 ;;
     esac
@@ -115,7 +116,7 @@ export K8S_URL TOKEN NAMESPACE DEPLOYMENT CONTAINER PATCH_JSON IMAGE
 KIND=${KIND-deployment}
 
 if [ "$FORMAT" == "json" ];then
-  ./yq r $PATCH_JSON > /tmp/rancher-deploy.yaml
+  yq r $PATCH_JSON > /tmp/rancher-deploy.yaml
 else
    cat $PATCH_JSON > /tmp/rancher-deploy.yaml
 fi

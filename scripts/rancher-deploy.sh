@@ -42,10 +42,11 @@ REGISTRY=$DOCKER_REGISTRY/$DOCKER_REPO
 TAG=${TAG-latest}
 FORMAT=json
 DRYRUN=$(false)
+DEBUG=$(false)
 
 #trap read debug
 # read the options
-TEMP=`getopt -o 's:t:n:d:r:jy' --long 'registry:,server:,token:,namespace:,deployment:,dry-run,tag:' -n 'test.sh' -- "$@"`
+TEMP=`getopt -o 's:t:n:d:r:jy' --long 'registry:,server:,token:,namespace:,deployment:,dry-run,tag:,debug' -n 'test.sh' -- "$@"`
 if [ $? -ne 0 ]; then
 	echo $USAGE >&2
 	exit 1
@@ -76,10 +77,17 @@ while true ; do
            DRYRUN=true; shift 1;;
         --tag)
            TAG=$2; shift 2;;
+        --debug)
+           DEBUG=true; shift 1;;
         --) shift ; break ;;
         *) echo "Internal error!" ; exit 1 ;;
     esac
 done
+
+if [ $DEBUG ]; then
+  set -x
+  echo "setting debug"
+fi
 
 KIND=${KIND-deployment}
 

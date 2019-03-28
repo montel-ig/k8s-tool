@@ -85,6 +85,7 @@ while true ; do
 done
 
 if [ $DEBUG ]; then
+
   set -x
   echo "setting debug"
 fi

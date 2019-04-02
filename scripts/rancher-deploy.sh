@@ -107,7 +107,14 @@ if [ -z "$param" ] && [ -z "$PATCH_JSON" ]; then
   exit 1
 fi
 
+
+
 PATCH_JSON=${param-$PATCH_JSON}
+
+if ! [[ -r $PATCH_JSON ]]; then
+  >&2 echo "file: $PATCH_JSON is not readable"
+  exit 1
+fi
 
 
 if [ -z "$K8S_URL" ]; then

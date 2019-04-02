@@ -29,6 +29,8 @@ export KUBE_RANCHER_NAMESPACE=stage
 rancher-deploy.sh -s https://rancher/k8s -t mysecrettoken -r registry.gitlab.com/myproject --tag v1.2.3 -y --dry-run apply patch.yaml
 
 ```
+### Getting the token
+Url and token are the ones witch are found in kubecogif.yaml. *DO NOT* accidentally use Rancher api URL and token and spend countles hours trying to debug
 
 ### Gitlab pipeline example ###
 In this example all other parameters are coming from CI/CD environment

@@ -142,7 +142,9 @@ if [ -z "$NAMESPACE" ]; then
   exit 1
 fi
 
-if ! kubectl cluster-info; then
+if ! kubectl --server=${K8S_URL} \
+        --insecure-skip-tls-verify=true \
+        --token=${TOKEN} cluster-info; then
   >&2 echo 'kubectl cannot connect to cluster'
   if ! [ $DRYRUN ]; then
    exit 1

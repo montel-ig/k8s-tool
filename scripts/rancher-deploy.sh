@@ -18,10 +18,11 @@ Usage: pathc|apply|create [args] file.(json|yaml)
 -n, --namespace       Namespace for deployment (\$KUBE_RANCHER_NAMESPACE )
 -d, --deployment      Deployment ( \$KUBE_RANCHER_DEPLOYMENT )
     --tag             image tag ( \$TAG )
--j                    Format json
+-j                    Format json  ( default )
 -y                    Format yaml
 
-    --dry-run          Show what is to be done
+    --dry-run         Show what is to be done
+    --debug           Use set -x to show all commands run
 
 Example:
 export KUBE_RANCHER_DEPLOYMENT=mypdoject
@@ -92,8 +93,8 @@ fi
 
 KIND=${KIND-deployment}
 
-cmd=$1
-param=$2
+cmd=$1   # patch | apply | create
+param=$2  # filename
 command="command_$1"
 
 ## chekc what is mandatory
@@ -139,6 +140,13 @@ fi
 if [ -z "$NAMESPACE" ]; then
   >&2 echo '-n / $KUBE_RANCHER_NAMESPACE  is missing'
   exit 1
+fi
+
+if ! kubectl cluster-info; then
+  >&2 echo 'kubectl cannot connect to cluster'
+  if ! [ $DRYRUN ]; then
+   exit 1
+  fi
 fi
 
 

@@ -33,6 +33,18 @@ rancher-deploy.sh -s https://rancher/k8s -t mysecrettoken -r registry.gitlab.com
 Url and token are the ones witch are found in kubecogif.yaml. *DO NOT* accidentally use Rancher api URL and token and spend countles hours trying to debug
 
 ### Gitlab pipeline example ###
+Configure CI/CD environment variables through gitlab.
+You have to browse to the gitlab project's settings and select CI/CD.
+Needed variables are:
+
+  - KUBE_RANCHER_TOKEN Used to connect to rancher, obtained from the Kubeconfig File in the cluster section
+  - KUBE_RANCHER_URL Used to connect to rancher, obtained from the Kubeconfig File in the cluster section
+  - KUBE_RANCHER_NAMESPACE Used for kubectl --namespace
+  - KUBE_RANCHER_DEPLOYMENT Used for kubectl --deployment
+  - DOCKER_REGISTRY Used for gitlab to pull your docker image
+  - DOCKER_REPO Used for gitlab to pull your docker image
+
+
 In this example all other parameters are coming from CI/CD environment
 ```yaml
 

@@ -16,7 +16,7 @@ Usage: pathc|apply|create [args] file.(json|yaml)
 -r, --registry        Docker registry (\$DOCKER_REGISTRY/\$DOCKER_REPO) )
 
 -n, --namespace       Namespace for deployment (\$KUBE_RANCHER_NAMESPACE )
--d, --deployment      Deployment ( \$KUBE_RANCHER_DEPLOYMENT )
+-d, --deployment      [patch only] Deployment ( \$KUBE_RANCHER_DEPLOYMENT )
     --tag             image tag ( \$TAG )
 -j                    Format json  ( default )
 -y                    Format yaml
@@ -108,7 +108,6 @@ if [ -z "$param" ] && [ -z "$PATCH_JSON" ]; then
 fi
 
 
-
 PATCH_JSON=${param-$PATCH_JSON}
 
 if ! [[ -r $PATCH_JSON ]]; then
@@ -131,7 +130,7 @@ if [ "$REGISTRY" == "/" ]; then
   exit 1
 fi
 
-if [ -z "$DEPLOYMENT" ]; then
+if [ "$command" == "command_patch" ] && [ -z "$DEPLOYMENT" ] ; then
   >&2 echo '-d / $KUBE_RANCHER_DEPLOYMENT  is missing'
   exit 1
 fi
@@ -154,10 +153,7 @@ fi
 IMAGE=$REGISTRY:$TAG
 # -----------------------------------------------------------------
 export K8S_URL TOKEN NAMESPACE DEPLOYMENT PATCH_JSON IMAGE
-# The docker-image-version must be updated every time you built a new container.
 
-
-KIND=${KIND-deployment}
 
 if [ "$FORMAT" == "json" ];then
   yq r $PATCH_JSON > /tmp/rancher-deploy.yaml

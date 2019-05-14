@@ -11,13 +11,13 @@ montel/k8s-tool:latest
 Usage: patch|apply|create [args] file.(json|yaml)
 
 
--s, --server          Kubernetes cluster/ Rancher API (\$KUBE_RANCHER_URL)
--t, --token           Rancher auth token (\$KUBE_RANCHER_TOKEN)
--r, --registry        Docker registry (\$DOCKER_REGISTRY/\$DOCKER_REPO) )
+-s, --server          Kubernetes cluster/ Rancher API ($KUBE_RANCHER_URL)
+-t, --token           Rancher auth token ($KUBE_RANCHER_TOKEN)
+-r, --registry        Docker registry ($DOCKER_REGISTRY/$DOCKER_REPO) )
 
--n, --namespace       Namespace for deployment (\$KUBE_RANCHER_NAMESPACE )
--d, --deployment      Deployment ( \$KUBE_RANCHER_DEPLOYMENT )
-    --tag             image tag ( \$TAG )
+-n, --namespace       Namespace for deployment ($KUBE_RANCHER_NAMESPACE )
+-d, --deployment      [patch only] Deployment ( $KUBE_RANCHER_DEPLOYMENT )
+    --tag             image tag ( $TAG )
 -j                    Format json
 -y                    Format yaml
 
@@ -37,14 +37,27 @@ Configure CI/CD environment variables through gitlab.
 You have to browse to the gitlab project's settings and select CI/CD.
 Needed variables are:
 
-  - KUBE_RANCHER_TOKEN Used to connect to rancher, obtained from the Kubeconfig File in the cluster section
-  - KUBE_RANCHER_URL Used to connect to rancher, obtained from the Kubeconfig File in the cluster section
-  - KUBE_RANCHER_NAMESPACE Used for kubectl --namespace
-  - KUBE_RANCHER_DEPLOYMENT Used for kubectl --deployment
-  - DOCKER_REGISTRY Used for gitlab to pull your docker image
-  - DOCKER_REPO Used for gitlab to pull your docker image
+  - KUBE_RANCHER_TOKEN [kubectl] Obtained from the kubeconfig file in the cluster section
+  - KUBE_RANCHER_URL   [kubectl] Obtained from the kubeconfig file in the cluster section
+  - KUBE_RANCHER_NAMESPACE [kubectl] Used for kubectl --namespace
+  - KUBE_RANCHER_DEPLOYMENT [kubectl patch] Used only in *patch* 
+  - DOCKER_REGISTRY [template] Used for construction docker path
+  - DOCKER_REPO [template] Used for construction docker path
 
+**Resulting kubectl call**
 
+```bash
+  kubectl --server=${KUBE_RANCHER_URL} \
+    --insecure-skip-tls-verify=true \
+    --token=${KUBE_RANCHER_TOKEN} \
+    --namespace=${KUBE_RANCHER_NAMESPACE} \
+    apply -f -
+```
+
+**Variables in template**
+  - ${IMAGE}  = $REGISTRY:$TAG , where registry can be from cmdline --registry or $DOCKER_REGISTRY/$DOCKER_REPO
+  - all env variables visible to rancher-deploy script
+  
 In this example all other parameters are coming from CI/CD environment
 ```yaml
 
@@ -56,7 +69,6 @@ deploy:project_staging:
   variables:
     TAG: $CI_COMMIT_SHORT_SHA
   script:
-    - export TAG
     - rancher-deploy.sh -n myproject-stage -y apply ./k8s/deployment.yaml
   only:
     - develop

@@ -177,7 +177,11 @@ function command_patch {
     patch $KIND/${DEPLOYMENT} --patch "$(cat /tmp/rancher-deploy-substituted.yaml)"
 EOF
     else
-     kubectl --server=${K8S_URL} \
+      if [ $DEBUG ]; then
+        cat /tmp/rancher-deploy-substituted.yaml
+      fi
+
+      kubectl --server=${K8S_URL} \
         --insecure-skip-tls-verify=true \
         --token=${TOKEN} \
         --namespace=${NAMESPACE} \
@@ -196,6 +200,10 @@ if [ $DRYRUN ]; then
     $1 -f -
 EOF
 else
+  if [ $DEBUG ]; then
+     cat /tmp/rancher-deploy-substituted.yaml
+  fi
+
   cat /tmp/rancher-deploy-substituted.yaml | kubectl --server=${K8S_URL} \
     --insecure-skip-tls-verify=true \
     --token=${TOKEN} \

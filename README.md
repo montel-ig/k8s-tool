@@ -1,11 +1,11 @@
 # k8s-tool
-CI/CD deploy helper with kubectl, curl yq and rancher-deploy script
+CI/CD deploy helper with kubectl, curl, yq and rancher cli and rancher-deploy script.
 
 
 ## Docker image
 montel/k8s-tool:latest
 
-## Usage
+## Rancher-deploy.sh usage
 
 ```text
 Usage: patch|apply|create [args] file.(json|yaml)

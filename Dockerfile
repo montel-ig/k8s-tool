@@ -12,6 +12,8 @@ RUN curl -LO https://github.com/rancher/cli/releases/download/v2.3.0-rc1/rancher
     tar -xzf rancher-linux-amd64-v2.3.0-rc1.tar.gz && \
     mv rancher-v2.3.0-rc1/rancher /usr/bin && \
     chmod a+x /usr/bin/rancher
+# FIX bug in GO name resolution -> https://github.com/golang/go/issues/22846
+RUN echo "hosts: files dns" > /etc/nsswitch.conf
 
 ADD ./scripts/rancher-deploy.sh /usr/bin/rancher-deploy.sh
 

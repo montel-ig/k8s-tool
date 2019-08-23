@@ -1,8 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+- Added reg, registry tool
 
--
  
 ## [1.2.3] - 2019-07-12
 ### Added

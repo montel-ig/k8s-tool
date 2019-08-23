@@ -1,5 +1,11 @@
 # k8s-tool
-CI/CD deploy helper with kubectl, curl, yq and rancher cli and rancher-deploy script.
+CI/CD deploy helper with:
+ * kubectl
+ * curl
+ * yq
+ * rancher (cli) 
+ * reg
+ * and *rancher-deploy script*
 
 
 ## Docker image

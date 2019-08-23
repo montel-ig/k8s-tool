@@ -13,5 +13,11 @@ RUN curl -LO https://github.com/rancher/cli/releases/download/v2.3.0-rc1/rancher
     mv rancher-v2.3.0-rc1/rancher /usr/bin && \
     chmod a+x /usr/bin/rancher
 
+# install REG
+RUN curl -Lo /usr/bin/reg https://github.com/genuinetools/reg/releases/download/v0.13.0/reg-linux-amd64 && chmod +x /usr/bin/reg
+
+# FIX bug in GO name resolution -> https://github.com/golang/go/issues/22846
+RUN echo "hosts: files dns" > /etc/nsswitch.conf
+
 ADD ./scripts/rancher-deploy.sh /usr/bin/rancher-deploy.sh
 

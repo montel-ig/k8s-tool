@@ -1,8 +1,13 @@
 # Changelog
 
 ## [Unreleased]
-- Added reg, registry tool
+- 
 
+## [1.2.5]
+- Added reg, registry tool to image
+
+## [1.2.4]
+- Fixed go name resolution bug
  
 ## [1.2.3] - 2019-07-12
 ### Added

@@ -1,8 +1,12 @@
 # Changelog
 
 ## [Unreleased]
-
 -
+
+## [1.2.5]
+### Added
+- Reg, registry tool to image
+
 ## [1.2.4] - 2019-07-17
 ### Added
 - Add fix for go bug  https://github.com/golang/go/issues/22846
